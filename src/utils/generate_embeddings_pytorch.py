@@ -28,7 +28,7 @@ class EmbeddingModel(pl.LightningModule):
     def forward(self, x):
         origin_embed =  self.embed(x[:,0])
         destination_embed = self.embed(x[:,1])
-        state_embed = torch.cat((origin_embed, destination_embed))
+        state_embed = torch.hstack((origin_embed, destination_embed))
         state_embed = self.linear1(state_embed)
         state_embed = self.act_fn(state_embed)
         state_embed = self.linear2(state_embed)
