@@ -1,17 +1,67 @@
 from pandas import read_csv
-from tensorflow.keras.layers import Input, Embedding, Concatenate, Dense  # type: ignore
-from tensorflow.keras.models import Model, save_model  # type: ignore
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
-from tensorflow.keras.optimizers import Adam  # type: ignore
+
 import numpy as np
 from math import floor
 import pdb
 import pickle
+import torch
+import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 
 from typing import Dict, Any
 
+class EmbeddingModel(pl.LightningModule):
+
+    def __init__(self, num_inputs, num_embed, num_hidden, num_outputs):
+        super().__init__()
+        self.save_hyperparameters()
+        self.embed = nn.Embedding(num_inputs, num_embed)
+        self.linear1 = nn.Linear(2*num_embed, num_hidden)
+        self.act_fn = nn.ELU()
+        self.linear2 = nn.Linear(num_hidden, num_outputs)
+        self.loss_module = nn.MSELoss()
+
+    def forward(self, origin_input, destination_input):
+        origin_embed =  self.embed(origin_input)
+        destination_embed = self.embed(destination_input)
+        state_embed = torch.cat((origin_embed, destination_embed))
+        state_embed = self.linear1(state_embed)
+        state_embed = self.act_fn(state_embed)
+        state_embed = self.linear2(state_embed)
+        return state_embed
+    def configure_optimizers(self):
+        # Create optimizer
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.001,
+                                     betas=(0.9, 0.999), eps=1e-07,
+                                     amsgrad=False)
+        return optimizer
+
+    def training_step(self, batch, batch_idx):
+        data, target = batch
+        preds = self.forward(data)
+        loss = self.loss_module(preds, target)
+        self.log('train_loss', loss, on_step=False, on_epoch=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        data, target = batch
+        preds = self.forward(data)
+        loss = self.loss_module(preds, target)
+        self.log('val_loss', loss, on_step=False, on_epoch=True)
+
+    def test_step(self, batch, batch_idx):
+        data, target = batch
+        preds = self.forward(data)
+        loss = self.loss_module(preds, target)
+        self.log('test_loss', loss, on_step=False, on_epoch=True)
+
+
 if __name__ == '__main__':
+    pl.seed_everything(42, workers=True)
     # Get Travel Times
     travel_times = read_csv('../../data/ny/zone_traveltime.csv', header=None).values
     mean_val = np.mean(travel_times)
@@ -21,19 +71,7 @@ if __name__ == '__main__':
     travel_times /= max_val
 
     # Define NN
-    origin_input = Input(shape=(1,), name='origin_input')
-    destination_input = Input(shape=(1,), name='destination_input')
-
-    location_embed = Embedding(output_dim=10, input_dim=travel_times.shape[0] + 1, mask_zero=True, name='location_embedding')
-    origin_embed = location_embed(origin_input)
-    destination_embed = location_embed(destination_input)
-
-    state_embed = Concatenate()([origin_embed, destination_embed])
-    state_embed = Dense(100, activation='elu', name='state_embed_1')(state_embed)
-    output = Dense(1, name='output')(state_embed)
-
-    model = Model(inputs=[origin_input, destination_input], outputs=output)
-    model.compile(optimizer=Adam(), loss='mean_squared_error')
+    model = EmbeddingModel(travel_times.shape[0] + 1, 10, 100, 1)
 
     # Format
     X: Dict[str, Any] = {'origin_input': [], 'destination_input': []}
@@ -53,16 +91,42 @@ if __name__ == '__main__':
     test_idxs = idxs[floor(0.9 * len(y)) + 1:]
 
     X_train = {key: np.array(value)[train_idxs] for key, value in X.items()}
+    X_train = torch.Tensor(np.array([value for value in X_train.values()]))
     X_valid = {key: np.array(value)[valid_idxs] for key, value in X.items()}
+    X_valid = torch.Tensor(np.array([value for value in X_valid.values()]))
     X_test = {key: np.array(value)[test_idxs] for key, value in X.items()}
+    X_test = torch.Tensor(np.array([value for value in X_test.values()]))
     y_train = (np.array(y)[train_idxs]).reshape((-1, 1, 1))
+    y_train = torch.Tensor(y_train)
     y_valid = (np.array(y)[valid_idxs]).reshape((-1, 1, 1))
+    y_valid = torch.Tensor(y_valid)
     y_test = (np.array(y)[test_idxs]).reshape((-1, 1, 1))
+    y_test = torch.Tensor(y_test)
+    train_dataset = TensorDataset(X_train, y_train)
+    valid_dataset = TensorDataset(X_valid, y_valid)
+    test_dataset = TensorDataset(X_test, y_test)
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size = 1024,
+                              pin_memory=True)
+    val_loader = DataLoader(valid_dataset, shuffle=False, batch_size = 1024,
+                              drop_last=False)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size = 1024,
+                             drop_last=False)
 
+    trainer = pl.Trainer(default_root_dir='../../models/embedding.h5',
+                         deterministic = True,
+                         gpus=1 if str(device)=="cuda:0" else 0,
+                         max_epochs=1000,
+                         callbacks=[EarlyStopping(monitor="val_loss",
+                                                   patience=15),
+                                    ModelCheckpoint(mode="min",
+                                                    monitor="val_loss")])
+    trainer.logger._log_graph = True
     # Train
-    model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), batch_size=1024, epochs=1000, callbacks=[EarlyStopping(patience=15), ModelCheckpoint('../../models/embedding.h5', save_best_only=True)])
-    test_loss = model.evaluate(x=X_test, y=y_test)
+    trainer.fit(model, train_loader, val_loader)
+
+    model = VAE.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+    test_loss = trainer.test(model, test_dataloaders=test_loader, verbose=True)
     print("Loss on test fraction: {}".format(test_loss))
 
     # Save Embeddings
-    pickle.dump(model.layers[2].get_weights(), open('../../data/ny/embedding_weights.pkl', 'wb'))
+    pickle.dump(model.embed.weight, open('../../data/ny/embedding_weights.pkl', 'wb'))
