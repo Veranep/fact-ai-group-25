@@ -102,7 +102,6 @@ if __name__ == '__main__':
     y_valid = torch.Tensor(y_valid)
     y_test = (np.array(y)[test_idxs]).reshape((-1, 1, 1))
     y_test = torch.Tensor(y_test)
-    print(X_train.shape, y_train.shape)
     train_dataset = TensorDataset(X_train, y_train)
     valid_dataset = TensorDataset(X_valid, y_valid)
     test_dataset = TensorDataset(X_test, y_test)
