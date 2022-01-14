@@ -99,11 +99,11 @@ if __name__ == '__main__':
     X_test = {key: np.array(value)[test_idxs] for key, value in X.items()}
     X_test = torch.tensor(np.array([value for value in X_test.values()]).T,
                           dtype=torch.int32)
-    y_train = (np.array(y)[train_idxs]).reshape((-1, 1, 1))
+    y_train = (np.array(y)[train_idxs]).reshape((-1, 1))
     y_train = torch.Tensor(y_train)
-    y_valid = (np.array(y)[valid_idxs]).reshape((-1, 1, 1))
+    y_valid = (np.array(y)[valid_idxs]).reshape((-1, 1))
     y_valid = torch.Tensor(y_valid)
-    y_test = (np.array(y)[test_idxs]).reshape((-1, 1, 1))
+    y_test = (np.array(y)[test_idxs]).reshape((-1, 1))
     y_test = torch.Tensor(y_test)
     train_dataset = TensorDataset(X_train, y_train)
     valid_dataset = TensorDataset(X_valid, y_valid)
