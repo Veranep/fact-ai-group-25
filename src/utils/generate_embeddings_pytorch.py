@@ -91,17 +91,18 @@ if __name__ == '__main__':
     test_idxs = idxs[floor(0.9 * len(y)) + 1:]
 
     X_train = {key: np.array(value)[train_idxs] for key, value in X.items()}
-    X_train = torch.Tensor(np.array([value for value in X_train.values()]))
+    X_train = torch.Tensor(np.array([value for value in X_train.values()]).T)
     X_valid = {key: np.array(value)[valid_idxs] for key, value in X.items()}
-    X_valid = torch.Tensor(np.array([value for value in X_valid.values()]))
+    X_valid = torch.Tensor(np.array([value for value in X_valid.values()]).T)
     X_test = {key: np.array(value)[test_idxs] for key, value in X.items()}
-    X_test = torch.Tensor(np.array([value for value in X_test.values()]))
+    X_test = torch.Tensor(np.array([value for value in X_test.values()]).T)
     y_train = (np.array(y)[train_idxs]).reshape((-1, 1, 1))
     y_train = torch.Tensor(y_train)
     y_valid = (np.array(y)[valid_idxs]).reshape((-1, 1, 1))
     y_valid = torch.Tensor(y_valid)
     y_test = (np.array(y)[test_idxs]).reshape((-1, 1, 1))
     y_test = torch.Tensor(y_test)
+    print(X_train.shape, y_train.shape)
     train_dataset = TensorDataset(X_train, y_train)
     valid_dataset = TensorDataset(X_valid, y_valid)
     test_dataset = TensorDataset(X_test, y_test)
@@ -114,7 +115,7 @@ if __name__ == '__main__':
 
     trainer = pl.Trainer(default_root_dir='../../models/embedding.h5',
                          deterministic = True,
-                         gpus=1 if str(device)=="cuda:0" else 0,
+                         gpus=1 if torch.cuda.is_available() else 0,
                          max_epochs=1000,
                          callbacks=[EarlyStopping(monitor="val_loss",
                                                    patience=15),
