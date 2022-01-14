@@ -25,9 +25,9 @@ class EmbeddingModel(pl.LightningModule):
         self.linear2 = nn.Linear(num_hidden, num_outputs)
         self.loss_module = nn.MSELoss()
 
-    def forward(self, origin_input, destination_input):
-        origin_embed =  self.embed(origin_input)
-        destination_embed = self.embed(destination_input)
+    def forward(self, x):
+        origin_embed =  self.embed(x[:,0])
+        destination_embed = self.embed(x[:,1])
         state_embed = torch.cat((origin_embed, destination_embed))
         state_embed = self.linear1(state_embed)
         state_embed = self.act_fn(state_embed)
@@ -106,11 +106,11 @@ if __name__ == '__main__':
     valid_dataset = TensorDataset(X_valid, y_valid)
     test_dataset = TensorDataset(X_test, y_test)
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size = 1024,
-                              pin_memory=True)
+                              pin_memory=True, num_workers=3)
     val_loader = DataLoader(valid_dataset, shuffle=False, batch_size = 1024,
-                              drop_last=False)
+                              drop_last=False, num_workers=3)
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size = 1024,
-                             drop_last=False)
+                             drop_last=False, num_workers=3)
 
     trainer = pl.Trainer(default_root_dir='../../models/embedding.h5',
                          deterministic = True,
