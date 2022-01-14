@@ -91,11 +91,14 @@ if __name__ == '__main__':
     test_idxs = idxs[floor(0.9 * len(y)) + 1:]
 
     X_train = {key: np.array(value)[train_idxs] for key, value in X.items()}
-    X_train = torch.Tensor(np.array([value for value in X_train.values()]).T)
+    X_train = torch.Tensor(np.array([value for value in X_train.values()]).T,
+                           dtype=torch.int32)
     X_valid = {key: np.array(value)[valid_idxs] for key, value in X.items()}
-    X_valid = torch.Tensor(np.array([value for value in X_valid.values()]).T)
+    X_valid = torch.Tensor(np.array([value for value in X_valid.values()]).T,
+                           dtype=torch.int32)
     X_test = {key: np.array(value)[test_idxs] for key, value in X.items()}
-    X_test = torch.Tensor(np.array([value for value in X_test.values()]).T)
+    X_test = torch.Tensor(np.array([value for value in X_test.values()]).T,
+                          dtype=torch.int32)
     y_train = (np.array(y)[train_idxs]).reshape((-1, 1, 1))
     y_train = torch.Tensor(y_train)
     y_valid = (np.array(y)[valid_idxs]).reshape((-1, 1, 1))
