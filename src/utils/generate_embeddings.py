@@ -1,8 +1,8 @@
 from pandas import read_csv
-from keras.layers import Input, Embedding, Concatenate, Dense  # type: ignore
-from keras.models import Model, save_model  # type: ignore
-from keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
-from keras.optimizers import Adam  # type: ignore
+from tensorflow.keras.layers import Input, Embedding, Concatenate, Dense  # type: ignore
+from tensorflow.keras.models import Model, save_model  # type: ignore
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
+from tensorflow.keras.optimizers import Adam  # type: ignore
 import numpy as np
 from math import floor
 import pdb
