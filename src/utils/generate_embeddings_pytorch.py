@@ -127,8 +127,8 @@ if __name__ == '__main__':
     # Train
     trainer.fit(model, train_loader, val_loader)
 
-    model = VAE.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
-    test_loss = trainer.test(model, test_dataloaders=test_loader, verbose=True)
+    model = EmbeddingModel.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+    test_loss = trainer.test(model, dataloaders=test_loader, verbose=True)
     print("Loss on test fraction: {}".format(test_loss))
 
     # Save Embeddings
