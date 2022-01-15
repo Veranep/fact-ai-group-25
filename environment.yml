@@ -125,6 +125,7 @@ dependencies:
   - sqlite=3.37.0=hc218d9a_0
   - tensorboard=2.4.1=pyhd8ed1ab_1
   - tensorboard-plugin-wit=1.8.1=pyhd8ed1ab_0
+  - tensorboardx=2.4=pyhd8ed1ab_0
   - tensorflow=2.4.1=py38h578d9bd_0
   - tensorflow-base=2.4.1=py38h83f5f1d_0
   - tensorflow-estimator=2.4.0=pyh9656e83_0
