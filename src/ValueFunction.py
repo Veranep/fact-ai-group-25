@@ -8,19 +8,20 @@ from CentralAgent import CentralAgent
 from Request import Request
 from Experience import Experience
 import Settings
-import Util 
+import Util
 
 from typing import List, Tuple, Deque, Dict, Any, Iterable
 
 from abc import ABC, abstractmethod
-from keras.layers import Input, LSTM, Dense, Embedding, TimeDistributed
-from keras.layers import Masking, Concatenate, Flatten, Bidirectional 
-from keras.models import Model, load_model, clone_model  # type: ignore
-from keras.backend import function as keras_function  # type: ignore
-from keras.optimizers import Adam  # type: ignore
-from keras.initializers import Constant  # type: ignore
-from tensorflow.summary import FileWriter  # type: ignore
-from tensorflow import Summary  # type: ignore
+import tensorflow as tf
+from tensorflow.keras.layers import Input, LSTM, Dense, Embedding, TimeDistributed
+from tensorflow.keras.layers import Masking, Concatenate, Flatten, Bidirectional
+from tensorflow.keras.models import Model, load_model, clone_model  # type: ignore
+import tensorflow.keras.backend as K  # type: ignore
+from tensorflow.keras.optimizers import Adam  # type: ignore
+from tensorflow.keras.initializers import Constant  # type: ignore
+from tensorflow.summary import create_file_writer  # type: ignore
+from tensorflow import summary  # type: ignore
 from collections import deque
 import numpy as np
 from itertools import repeat
@@ -28,6 +29,8 @@ from copy import deepcopy
 from os.path import isfile, isdir
 from os import makedirs
 import pickle
+
+tf.compat.v1.disable_eager_execution()
 
 
 class ValueFunction(ABC):
@@ -40,13 +43,12 @@ class ValueFunction(ABC):
         log_dir = log_dir + type(self).__name__ + '/'
         if not isdir(log_dir):
             makedirs(log_dir)
-        self.writer = FileWriter(log_dir)
+        self.writer = create_file_writer(log_dir)
 
     def add_to_logs(self, tag: str, value: float, step: int) -> None:
-        summary = Summary()
-        summary.value.add(tag=tag, simple_value=value)
-        self.writer.add_summary(summary, step)
-        self.writer.flush()
+        with self.writer.as_default():
+            summary.scalar(tag, value, step=step)
+            self.writer.flush()
 
     @abstractmethod
     def get_value(self, experiences: List[Experience]) -> List[List[Tuple[Action, float]]]:
@@ -95,8 +97,8 @@ class NeuralNetworkBased(ValueFunction):
         # Define soft-update function for target_model_update
         self.update_target_model = self._soft_update_function(self.target_model, self.model)
 
-    # Essentially weighted average between weights 
-    def _soft_update_function(self, target_model: Model, source_model: Model) -> keras_function:
+    # Essentially weighted average between weights
+    def _soft_update_function(self, target_model: Model, source_model: Model) -> K.function:
         target_weights = target_model.trainable_weights
         source_weights = source_model.trainable_weights
 
@@ -104,7 +106,7 @@ class NeuralNetworkBased(ValueFunction):
         for target_weight, source_weight in zip(target_weights, source_weights):
             updates.append((target_weight, self.TARGET_UPDATE_TAU * source_weight + (1. - self.TARGET_UPDATE_TAU) * target_weight))
 
-        return keras_function([], [], updates=updates)
+        return K.function([], [K.constant([0,1])], updates=updates)
 
     @abstractmethod
     def _init_NN(self, num_locs: int):
@@ -208,7 +210,7 @@ class NeuralNetworkBased(ValueFunction):
             return self.envt.get_reward(action,driver_num) + self.GAMMA * value
 
 
-        driver_num = 0    
+        driver_num = 0
         feasible_actions_all_agents = [feasible_actions for experience in experiences for feasible_actions in experience.feasible_actions_all_agents]
 
         scored_actions_all_agents: List[List[Tuple[Action, float]]] = []
@@ -343,7 +345,7 @@ class PathBasedNN(NeuralNetworkBased):
                   other_agents_input, num_requests_input]
         if Settings.has_value("nn_inputs") and "profit_z" in Settings.get_value("nn_inputs"):
             inputs.append(agent_profit_input)
-        
+
 
         model = Model(inputs=inputs, outputs=output)
 
@@ -359,7 +361,7 @@ class PathBasedNN(NeuralNetworkBased):
         else:
             agent_profit_input = 0
 
-        # For some reason, this mode was weird 
+        # For some reason, this mode was weird
         if self.load_model_loc == "../models/PathBasedNN_1000agent_4capacity_300delay_60interval_2_245261.h5":
             location_order: np.ndarray = np.zeros(shape=(self.envt.MAX_CAPACITY * 5 + 1,), dtype='int32')
             delay_order: np.ndarray = np.zeros(shape=(self.envt.MAX_CAPACITY * 5 + 1, 1)) - 1
@@ -367,7 +369,7 @@ class PathBasedNN(NeuralNetworkBased):
         else: # Getting path based inputs
             location_order: np.ndarray = np.zeros(shape=(self.envt.MAX_CAPACITY * 2 + 1,), dtype='int32')
             delay_order: np.ndarray = np.zeros(shape=(self.envt.MAX_CAPACITY * 2 + 1, 1)) - 1
-        
+
         # Adding current location
         location_order[0] = agent.position.next_location + 1
         delay_order[0] = 1
@@ -471,18 +473,18 @@ def closest_driver_score(envt,action,agent,driver_num):
 
     if len(all_positions) == 0:
         return 0
-    
+
     max_distance = max([envt.get_travel_time(position,j) for j in all_positions])
 
     if max_distance != 0:
         score/=max_distance
-    else: 
+    else:
         score = 10000000
 
     return score
 
 def furthest_driver_score(envt,action,agent,driver_num):
-    score = sum([request.value for request in action.requests])    
+    score = sum([request.value for request in action.requests])
     position = agent.position.next_location
     all_positions = [request.pickup for request in action.requests]
     all_positions += [request.dropoff for request in action.requests]
@@ -490,7 +492,7 @@ def furthest_driver_score(envt,action,agent,driver_num):
     max_distance = max([envt.get_travel_time(position,j) for j in all_positions],default=0)
     score*=max_distance
     return score
-	
+
 def two_sided_score(envt,action,agent,driver_num):
     position = agent.position.next_location
     lamb = Settings.get_value("lambda")
@@ -554,7 +556,7 @@ def immideate_reward_score(envt,action,agent,driver_num):
     DELAY_COEFFICIENT = 0
     if Settings.has_value("delay_coefficient"):
         DELAY_COEFFICIENT = Settings.get_value("delay_coefficient")
-    
+
     remaining_delay_bonus = DELAY_COEFFICIENT * action.new_path.total_delay
     score = immediate_reward + remaining_delay_bonus
     return score
@@ -563,6 +565,7 @@ def num_to_value_function(envt,num):
     model_loc = ""
     if Settings.has_value("model_loc"):
         model_loc = Settings.get_value("model_loc")
+    # reward is total num of requests
     if num == 1:
         value_function = PathBasedNN(envt,load_model_loc=model_loc)
     elif num == 2:
@@ -577,23 +580,26 @@ def num_to_value_function(envt,num):
         value_function = GreedyValueFunction(envt,two_sided_score)
     elif num == 7:
         value_function = GreedyValueFunction(envt,lambda_entropy_score)
+    #reward is profit - lambda * driver entropy for finite entropy, else profit
     elif num == 8:
         value_function = PathBasedNN(envt, load_model_loc=model_loc)
     elif num == 9:
         value_function = GreedyValueFunction(envt,lambda_variance_score)
+    #reward is profit - lambda * driver variance
     elif num == 10:
         value_function = PathBasedNN(envt,load_model_loc=model_loc)
     elif num == 11:
         value_function = GreedyValueFunction(envt,lambda_entropy_rider_score)
+    #reward is profit - lambda * rider entropy for finite entropy, else profit
     elif num == 12:
         value_function = PathBasedNN(envt,load_model_loc=model_loc)
     elif num == 13:
         value_function = GreedyValueFunction(envt,lambda_variance_rider_score)
+    #reward is profit - lambda * rider variance
     elif num == 14:
         value_function = PathBasedNN(envt,load_model_loc=model_loc)
+    #reward is total profit
     elif num == 15:
         value_function = PathBasedNN(envt,load_model_loc=model_loc)
 
     return value_function
-
-
