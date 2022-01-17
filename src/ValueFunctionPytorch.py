@@ -195,15 +195,13 @@ class NeuralNetworkBased(ValueFunction):
     def get_value(self, experiences: List[Experience], network=None) -> List[List[Tuple[Action, float]]]:
         # Format experiences
         action_inputs_all_agents, shape_info = self._format_experiences(experiences, is_current=False)
-        test_dataset = TensorDataset(torch.tensor(list(action_inputs_all_agents.values())))
-        test_loader = DataLoader(test_dataset, shuffle=False, batch_size = self.BATCH_SIZE_PREDICT, drop_last=False, num_workers=3)
+        values = list(action_inputs_all_agents.values())[:-1]
+        test_data = torch.tensor(np.hstack([values[0], values[1].squeeze(), np.expand_dims(values[2], axis=1), np.expand_dims(values[3], axis=1), np.expand_dims(values[4], axis=1)]))
         # Score experiences
         if (network is None):
-            model = PathModel.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
-            model.loss_module.weights = torch.ones_like(supervised_targets)
-            expected_future_values_all_agents = self.trainer.predict(model, dataloaders=test_loader)
+            expected_future_values_all_agents = self.model(test_data)
         else:
-            expected_future_values_all_agents = self.trainer.predict(network, dataloaders=test_loader)
+            expected_future_values_all_agents = network(test_data)
 
         # Format output
         expected_future_values_all_agents = self._reconstruct_NN_output(expected_future_values_all_agents, shape_info)
@@ -269,11 +267,13 @@ class NeuralNetworkBased(ValueFunction):
             # Why is this helpful
             # UPDATE NN BASED ON TD-TARGET
             action_inputs_all_agents, _ = self._format_experiences([experience], is_current=True)
-            train_dataset = TensorDataset(torch.tensor(list(action_inputs_all_agents.values())), torch.tensor(supervised_targets))
+            values = list(action_inputs_all_agents.values())[:-1]
+            train_dataset = TensorDataset(torch.tensor(np.hstack([values[0], values[1].squeeze(), np.expand_dims(values[2], axis=1), np.expand_dims(values[3], axis=1), np.expand_dims(values[4], axis=1)])), torch.tensor(supervised_targets))
             train_loader = DataLoader(train_dataset, shuffle=True, batch_size = self.BATCH_SIZE_FIT,
                                       pin_memory=True, num_workers=3)
             self.model.loss_module.weights = weights
             self.trainer.fit(self.model, train_loader)
+            self.model = PathModel.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
 
             # Write to logs
             loss = trainer.logged_metrics['train_loss'][-1]
@@ -282,11 +282,9 @@ class NeuralNetworkBased(ValueFunction):
             # Update weights of replay buffer after update
             if isinstance(self.replay_buffer, PrioritizedReplayBuffer):
                 # Calculate new squared errors
-                test_dataset = TensorDataset(torch.tensor(list(action_inputs_all_agents.values())), torch.tensor(supervised_targets))
-                test_loader = DataLoader(test_dataset, shuffle=False, batch_size = self.BATCH_SIZE_PREDICT, drop_last=False, num_workers=3)
-                model = PathModel.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
-                model.loss_module.weights = torch.ones_like(supervised_targets)
-                predicted_values = self.trainer.predict(model, dataloaders=test_loader)
+                values = list(action_inputs_all_agents.values())[:-1]
+                test_data = torch.tensor(np.hstack([values[0], values[1].squeeze(), np.expand_dims(values[2], axis=1), np.expand_dims(values[3], axis=1), np.expand_dims(values[4], axis=1)]))
+                predicted_values = self.model(test_data)
                 loss = np.mean((predicted_values - supervised_targets) ** 2 + 1e-6)
                 # Update priorities
                 self.replay_buffer.update_priorities([batch_idx], [loss])
@@ -302,6 +300,7 @@ class PathModel(pl.LightningModule):
     def __init__(self, num_inputs, num_delay, data_dir):
         super().__init__()
         self.save_hyperparameters()
+        self.cap = num_delay
         if (isfile(data_dir + 'embedding_weights.pkl')):
             weights = pickle.load(open(data_dir + 'embedding_weights.pkl', 'rb'))
             if len(weights) == 1:
@@ -309,7 +308,7 @@ class PathModel(pl.LightningModule):
             self.embed = nn.Embedding.from_pretrained(torch.tensor(weights), freeze=True)
         else:
             self.embed = nn.Embedding(num_inputs, 100)
-        self.lstm = nn.LSTM(100+num_delay, 200, batch_first=True)
+        self.lstm = nn.LSTM(100+1, 200, batch_first=True)
         self.linear1 = nn.Linear(1, 100)
         self.act_fn1 = nn.ELU()
         self.linear2 = nn.Linear(200+100+2, 300)
@@ -320,19 +319,25 @@ class PathModel(pl.LightningModule):
         self.loss_module = WeightedMSELoss()
 
     def forward(self, x):
-        path_location, delay, current_time, other_agents, num_requests = x
+        path_location = x[:,:self.cap].int()
+        delay = x[:,self.cap: 2*self.cap].float()
+        current_time = x[:,2*self.cap:2*self.cap+1].float()
+        other_agents = x[:,2*self.cap+1:2*self.cap+2].float()
+        num_requests = x[:,2*self.cap+2:].float()
         path_location_embed =  self.embed(path_location)
-        seq_lengths = np.count_nonzero(delay==0, axis=1)
-        perm_idx = np.argsort(seq_lengths)[::-1]
+        seq_lengths = np.count_nonzero(delay!=-1, axis=1)
+        path_input = torch.cat([delay.unsqueeze(dim=-1), path_location_embed], dim=-1).flip(dims=[1])
+        path_input = torch.cat([torch.cat([path_input[i][-seq_lengths[i]:], path_input[i][:-seq_lengths[i]]]).unsqueeze(dim=0) for i in range(len(path_input))], dim=0)
+        perm_idx = np.argsort(seq_lengths)[::-1].copy()
         seq_lengths = seq_lengths[perm_idx]
-        delay = delay[perm_idx]
-        delay_masked = torch.nn.utils.rnn.pack_padded_sequence(delay, seq_lengths, batch_first=True)
-        path_input = torch.hstack((path_location_embed, delay_masked))
-        path_embed, _ = self.lstm(path_input.flip(dims=[0]))
-        path_embed, _ = pad_packed_sequence(path_embed)
+        path_input = path_input[perm_idx]
+        path_input = torch.nn.utils.rnn.pack_padded_sequence(path_input, seq_lengths, batch_first=True)
+        path_embed, _ = self.lstm(path_input)
+        path_embed, _ = torch.nn.utils.rnn.pad_packed_sequence(path_embed, batch_first=True, total_length=self.cap)
+        path_embed = path_embed[:,-1,:].squeeze()
         current_time = self.linear1(current_time)
         current_time = self.act_fn1(current_time)
-        state_embed = torch.hstack((path_embed, current_time, other_agents, num_requests))
+        state_embed = torch.hstack([path_embed, current_time, other_agents, num_requests])
         state_embed = self.linear2(state_embed)
         state_embed = self.act_fn2(state_embed)
         state_embed = self.linear3(state_embed)
