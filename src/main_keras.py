@@ -5,7 +5,7 @@ from Environment import NYEnvironment
 from CentralAgent import CentralAgent
 from LearningAgent import LearningAgent
 from Oracle import Oracle
-import ValueFunction
+import ValueFunctionKeras
 from Experience import Experience
 from Request import Request
 
@@ -24,7 +24,7 @@ import datetime
 
 start = time.time()
 
-# Get statistics by simulating the next epoch 
+# Get statistics by simulating the next epoch
 def get_statistics_next_epoch(agent,envt):
     ret_dictionary = {'total_delivery_delay':0,'requests_served':0}
     start_time = envt.current_time
@@ -74,7 +74,7 @@ def get_profit_distribution(scored_final_actions):
     profits = []
     agent_profits = []
     for agent, (action,_) in enumerate(scored_final_actions):
-        # Calculate the profit 
+        # Calculate the profit
         for request in action.requests:
             dropoff = request.dropoff
             pickup = request.pickup
@@ -84,8 +84,8 @@ def get_profit_distribution(scored_final_actions):
             if action_profit!=0:
                 profits.append(action_profit)
                 agent_profits.append((agent,action_profit))
-            
-            
+
+
     return profits,agent_profits
 
 def run_epoch(envt,
@@ -177,7 +177,7 @@ def run_epoch(envt,
         if Settings.has_value("print_verbose") and Settings.get_value("print_verbose"):
             print("Reward for epoch: {}".format(sum(rewards)))
 
-        profits,agent_profits = get_profit_distribution(scored_final_actions)            
+        profits,agent_profits = get_profit_distribution(scored_final_actions)
         for i,j in agent_profits:
             envt.driver_profits[i]+=j
 
@@ -230,7 +230,7 @@ def run_epoch(envt,
 
 
     ret_dictionary['total_requests_accepted'] = total_value_generated
-    
+
     return ret_dictionary
 
 
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     oracle = Oracle(envt)
     central_agent = CentralAgent(envt)
     central_agent.mode = "train"
-    value_function = ValueFunction.num_to_value_function(envt,value_num)
+    value_function = ValueFunctionKeras.num_to_value_function(envt,value_num)
 
     print("Input settings {}".format(Settings.settings_list))
 
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         total_requests_served = epoch_data['total_requests_accepted']
         print("(TEST) DAY: {}, Requests: {}\n\n".format(day, total_requests_served))
 
-        # Write our pickled resutls 
+        # Write our pickled resutls
         if write_to_file:
             epoch_data['settings'] = Settings.settings_list
             epoch_data['settings']['time'] = int(time.time()-start)
@@ -325,7 +325,7 @@ if __name__ == '__main__':
             epoch_data['one_permutation_shapley'] = central_agent.one_permutation_shapley_final
             file_name = str(datetime.datetime.now()).split(".")[0].replace(" ","_").replace(":","")
             pickle.dump(epoch_data,open("../logs/epoch_data/"+file_name+".pkl","wb"))
-            
+
         value_function.add_to_logs('test_requests_served', total_requests_served, envt.num_days_trained)
 
         envt.num_days_trained += 1
