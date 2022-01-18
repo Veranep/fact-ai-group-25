@@ -333,7 +333,7 @@ class PathModel(pl.LightningModule):
         path_input = path_input[perm_idx]
         path_input = torch.nn.utils.rnn.pack_padded_sequence(path_input, seq_lengths, batch_first=True)
         path_embed, _ = self.lstm(path_input)
-        path_embed, _ = torch.nn.utils.rnn.pad_packed_sequence(path_embed, batch_first=True, total_length=self.cap)
+        path_embed, _ = torch.nn.utils.rnn.pad_packed_sequence(path_embed, batch_first=True, total_length=self.cap, padding_value=-1.0)
         path_embed = path_embed[:,-1,:].squeeze()
         current_time = self.linear1(current_time)
         current_time = self.act_fn1(current_time)
