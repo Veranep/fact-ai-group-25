@@ -251,7 +251,7 @@ if __name__ == '__main__':
     SAVE_FREQ: int = VALID_FREQ
     Request.MAX_PICKUP_DELAY = PICKUP_DELAY
     Request.MAX_DROPOFF_DELAY = 2 * PICKUP_DELAY
-    NEURAL_VALUE_FUNCTIONS = [1,8]
+    NEURAL_VALUE_FUNCTIONS = [1,8, 10, 14, 15]
 
     # Load in different settings
     training_days = Settings.get_value("training_days")
@@ -301,7 +301,7 @@ if __name__ == '__main__':
                         max_test_score = test_score if test_score > max_test_score else max_test_score
 
             envt.num_days_trained += 1
-            if value_num in NEURAL_VALUE_FUNCTIONS:
+            if value_num in NEURAL_VALUE_FUNCTIONS and value_function.trainer.model:
                 value_function.trainer.save_checkpoint('../models/{}_{}.h5'.format(num_agents,  envt.num_days_trained))
 
     # Reset the driver utilities
