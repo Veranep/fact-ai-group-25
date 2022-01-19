@@ -31,7 +31,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 class WeightedMSELoss(nn.Module):
     def __init__(self, weights=None, size_average=True):
         super(WeightedMSELoss, self).__init__()
-        self.weights = weights
+        self.weights = torch.tensor(weights)
 
     def forward(self, inputs, targets):
         return (self.weights * (inputs - targets) ** 2).mean()
