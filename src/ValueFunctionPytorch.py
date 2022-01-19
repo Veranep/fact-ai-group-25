@@ -93,11 +93,12 @@ class NeuralNetworkBased(ValueFunction):
         self.target_model = copy.deepcopy(self.model)
 
         self.trainer = pl.Trainer(default_root_dir="../models/",
-                         deterministic = True,
-                         gpus=1 if torch.cuda.is_available() else 0,
-                         max_epochs=1,
-                         callbacks=[ModelCheckpoint(mode="min",
-                                                    monitor="val_loss")])
+                                  log_every_n_steps=5,
+                                  deterministic = True,
+                                  gpus=1 if torch.cuda.is_available() else 0,
+                                  max_epochs=1,
+                                  callbacks=[ModelCheckpoint(mode="min",
+                                                             monitor="val_loss")])
 
     # Essentially weighted average between weights
     def _soft_update_function(self, target_model, source_model):
@@ -325,7 +326,7 @@ class PathModel(pl.LightningModule):
         other_agents = x[:,2*self.cap+1:2*self.cap+2].float()
         num_requests = x[:,2*self.cap+2:].float()
         path_location_embed =  self.embed(path_location)
-        seq_lengths = np.count_nonzero(delay!=-1, axis=1)
+        seq_lengths = np.count_nonzero(delay.cpu()!=-1, axis=1)
         path_input = torch.cat([delay.unsqueeze(dim=-1), path_location_embed], dim=-1).flip(dims=[1])
         path_input = torch.cat([torch.cat([path_input[i][-seq_lengths[i]:], path_input[i][:-seq_lengths[i]]]).unsqueeze(dim=0) for i in range(len(path_input))], dim=0)
         perm_idx = np.argsort(seq_lengths)[::-1].copy()
@@ -359,12 +360,6 @@ class PathModel(pl.LightningModule):
         loss = self.loss_module(preds, target)
         self.log('train_loss', loss, on_step=False, on_epoch=True)
         return loss
-
-    def validation_step(self, batch, batch_idx):
-        data, target = batch
-        preds = self.forward(data)
-        loss = self.loss_module(preds, target)
-        self.log('val_loss', loss, on_step=False, on_epoch=True)
 
     def test_step(self, batch, batch_idx):
         data, target = batch
