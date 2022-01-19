@@ -31,7 +31,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 class WeightedMSELoss(nn.Module):
     def __init__(self, weights=None, size_average=True):
         super(WeightedMSELoss, self).__init__()
-        self.weights = torch.tensor(weights)
+        self.weights = weights
 
     def forward(self, inputs, targets):
         return (self.weights * (inputs - targets) ** 2).mean()
@@ -272,6 +272,8 @@ class NeuralNetworkBased(ValueFunction):
             train_dataset = TensorDataset(torch.tensor(np.hstack([values[0], values[1].squeeze(), np.expand_dims(values[2], axis=1), np.expand_dims(values[3], axis=1), np.expand_dims(values[4], axis=1)])), torch.tensor(supervised_targets))
             train_loader = DataLoader(train_dataset, shuffle=True, batch_size = self.BATCH_SIZE_FIT,
                                       pin_memory=True, num_workers=3)
+            if weights is not None:
+                weights = torch.tensor(weights)
             self.model.loss_module.weights = weights
             self.trainer.fit(self.model, train_loader)
             self.model = PathModel.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
