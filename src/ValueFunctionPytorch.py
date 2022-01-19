@@ -273,7 +273,7 @@ class NeuralNetworkBased(ValueFunction):
             train_loader = DataLoader(train_dataset, shuffle=True, batch_size = self.BATCH_SIZE_FIT,
                                       pin_memory=True, num_workers=3)
             if weights is not None:
-                weights = torch.tensor(weights)
+                weights = torch.tensor(weights).to_device(train_dataset.tensors[0].device)
             self.model.loss_module.weights = weights
             self.trainer.fit(self.model, train_loader)
             self.model = PathModel.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
