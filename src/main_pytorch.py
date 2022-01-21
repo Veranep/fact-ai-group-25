@@ -297,12 +297,12 @@ if __name__ == '__main__':
                 # TODO: Save results better
                 if (isinstance(value_function, NeuralNetworkBased)):
                     if (test_score > max_test_score or (envt.num_days_trained % SAVE_FREQ) == (SAVE_FREQ - 1)):
-                        value_function.trainer.save_checkpoint('../models/{}_{}agent_{}capacity_{}delay_{}interval_{}_{}.h5'.format(type(value_function).__name__, numagents, args.capacity, args.pickupdelay, args.decisioninterval, envt.num_days_trained, test_score))
+                        value_function.trainer.save_checkpoint('{}_{}agent_{}capacity_{}delay_{}interval_{}_{}.h5'.format(type(value_function).__name__, numagents, args.capacity, args.pickupdelay, args.decisioninterval, envt.num_days_trained, test_score))
                         max_test_score = test_score if test_score > max_test_score else max_test_score
 
             envt.num_days_trained += 1
             if value_num in NEURAL_VALUE_FUNCTIONS and value_function.trainer.model:
-                value_function.trainer.save_checkpoint('../models/{}_{}.h5'.format(num_agents,  envt.num_days_trained))
+                value_function.trainer.save_checkpoint('{}_{}.h5'.format(num_agents,  envt.num_days_trained))
 
     # Reset the driver utilities
     envt.reset()

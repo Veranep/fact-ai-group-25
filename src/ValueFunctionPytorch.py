@@ -34,6 +34,7 @@ class WeightedMSELoss(nn.Module):
         self.weights = weights
 
     def forward(self, inputs, targets):
+        self.weights = self.weights.to(inputs.device)
         return (self.weights * (inputs - targets) ** 2).mean()
 
 
@@ -96,9 +97,7 @@ class NeuralNetworkBased(ValueFunction):
                                   log_every_n_steps=5,
                                   deterministic = True,
                                   gpus=1 if torch.cuda.is_available() else 0,
-                                  max_epochs=1,
-                                  callbacks=[ModelCheckpoint(mode="min",
-                                                             monitor="val_loss")])
+                                  max_epochs=1)
 
     # Essentially weighted average between weights
     def _soft_update_function(self, target_model, source_model):
@@ -273,14 +272,13 @@ class NeuralNetworkBased(ValueFunction):
             train_loader = DataLoader(train_dataset, shuffle=True, batch_size = self.BATCH_SIZE_FIT,
                                       pin_memory=True, num_workers=3)
             if weights is not None:
-                weights = torch.tensor(weights, device=self.model.device)
+                weights = torch.tensor(weights)
             self.model.loss_module.weights = weights
             self.trainer.fit(self.model, train_loader)
-            self.model = PathModel.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
 
             # Write to logs
-            loss = trainer.logged_metrics['train_loss'][-1]
-            self.add_to_logs('loss', loss, self._epoch_id)
+            #loss = trainer.logged_metrics['train_loss'][-1]
+            #self.add_to_logs('loss', loss, self._epoch_id)
 
             # Update weights of replay buffer after update
             if isinstance(self.replay_buffer, PrioritizedReplayBuffer):
@@ -288,7 +286,7 @@ class NeuralNetworkBased(ValueFunction):
                 values = list(action_inputs_all_agents.values())[:-1]
                 test_data = torch.tensor(np.hstack([values[0], values[1].squeeze(), np.expand_dims(values[2], axis=1), np.expand_dims(values[3], axis=1), np.expand_dims(values[4], axis=1)]))
                 predicted_values = self.model(test_data)
-                loss = np.mean((predicted_values - supervised_targets) ** 2 + 1e-6)
+                loss = np.mean((predicted_values.detach().numpy() - supervised_targets) ** 2 + 1e-6)
                 # Update priorities
                 self.replay_buffer.update_priorities([batch_idx], [loss])
 
@@ -360,14 +358,14 @@ class PathModel(pl.LightningModule):
         data, target = batch
         preds = self.forward(data)
         loss = self.loss_module(preds, target)
-        self.log('train_loss', loss, on_step=False, on_epoch=True)
+        self.log('train_loss', loss, on_step=True, on_epoch=True)
         return loss
 
     def test_step(self, batch, batch_idx):
         data, target = batch
         preds = self.forward(data)
         loss = self.loss_module(preds, target)
-        self.log('test_loss', loss, on_step=False, on_epoch=True)
+        self.log('test_loss', loss, on_step=True, on_epoch=True)
 
 
 class PathBasedNN(NeuralNetworkBased):
