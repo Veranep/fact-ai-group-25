@@ -7,7 +7,8 @@ from datetime import datetime
 import sys
 import geopy.distance
 
-G = nx.read_gpickle('manhattan_graph.gpickle')
+
+G = nx.read_gpickle('Graph-Manhattan.pickle')
 nodes = ox.graph_to_gdfs(G, edges=False)
 osmid_to_nodeid = dict(zip(list(nodes.index), list(range(nodes.shape[0]))))
 formatstring = '%Y-%m-%d %H:%M:%S'
