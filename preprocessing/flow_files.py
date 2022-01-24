@@ -6,18 +6,19 @@ import csv
 from datetime import datetime
 import sys
 import geopy.distance
+from get_graph_Manhattan import get_graph
 
 
-G = nx.read_gpickle('Graph-Manhattan.pickle')
+G = get_graph()
 nodes = ox.graph_to_gdfs(G, edges=False)
 osmid_to_nodeid = dict(zip(list(nodes.index), list(range(nodes.shape[0]))))
 formatstring = '%Y-%m-%d %H:%M:%S'
 
-with open('yellow_tripdata_2016-04.csv', newline='') as csvfile:
+with open('data/yellow_tripdata_2016-04.csv', newline='') as csvfile:
     i = 0
     flow = 0
     day = 1
-    f = open(f"test_flow_5000_{day}.txt", 'w')
+    f = open(f"out/test_flow_5000_{day}.txt", 'w')
     sys.stdout = f  
     reader = csv.DictReader(csvfile)
     print('1440')
@@ -38,10 +39,10 @@ with open('yellow_tripdata_2016-04.csv', newline='') as csvfile:
             last_time = new_time
 
             f.close()
-            f = open(f"test_flow_5000_{day}.txt", 'w')
+            f = open(f"out/test_flow_5000_{day}.txt", 'w')
             sys.stdout = f  
             print(new_time)
-            print('8765')
+            print('1440')
             print(f'Flows: {flow}-{flow}')
             
             
@@ -64,6 +65,5 @@ with open('yellow_tripdata_2016-04.csv', newline='') as csvfile:
             print(f'{osmid_to_nodeid[pickup_osmid]}, {osmid_to_nodeid[dest_osmid]}, 1.0')
 
         i += 1
-        if i == 1000:
-            break
+
     f.close()
