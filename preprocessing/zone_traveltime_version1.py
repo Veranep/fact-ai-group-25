@@ -19,3 +19,5 @@ for start_node_id in nodes_id:
         edge = G.get_edge_data(start_node_id, dest_node_id)
         travel_time = edge[0]['travel_time']
         csv_path[start_node_id][dest_node_id] = travel_time
+
+csv_path.to_csv('/out/zone_traveltime.csv')
