@@ -10,6 +10,9 @@ preprocessing/out/*
 !preprocessing/data/README.txt
 !preprocessing/out/README.txt
 
+cache/
+preprocessing/cache/*
+
 ### macOS ###
 # General
 .DS_Store

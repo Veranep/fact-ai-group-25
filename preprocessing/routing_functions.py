@@ -3,7 +3,7 @@ import random
 import pickle
 
 def save_var(var, file_name):
-    with open(file_name, 'wb') as f:
+    with open('out/' + file_name, 'wb') as f:
         pickle.dump(var, f)
 
 def print_progress(remaining_pairs, G):

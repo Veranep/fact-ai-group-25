@@ -6,7 +6,7 @@ import numpy as np
 import os.path
 
 def get_graph():
-    file_name = 'Graph-Manhattan.pickle'
+    file_name = 'out/Graph-Manhattan.pickle'
 
     if os.path.isfile(file_name):
         with open(file_name, 'rb') as f:
