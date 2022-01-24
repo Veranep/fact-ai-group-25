@@ -1,5 +1,6 @@
 from get_graph_Manhattan import get_graph
 from routing_functions import *
+import numpy as np
 
 
 # this if __name__ line is necessary for the multiprocessing to work
@@ -115,6 +116,8 @@ if __name__ == "__main__":
     # didn't find a route. These routes we compute using Dijkstra (like in strategy 1 and 2), 
     # after which the csv is guaranteed to be complete
 
+    print('Strategy 4 started')
+
     # get all remaining pairs by looping through the csv
     remaining_pairs_list = get_all_remaining_pairs(csv_dict)
     # copy it into a set. This is actually unnecessary but compute_routes_for_batch() expects
@@ -130,9 +133,35 @@ if __name__ == "__main__":
         # save progress
         save_var(csv_dict, 'csv_strategy_4.pickle')
 
-
-    # Save completed csv
-    save_var(csv_dict, 'csv_final.pickle')
+    print('Strategy 4 completed')
 
     # Print pairs remaing. If this is not 0, then there is a bug.
-    print('Pairs remaining (must be 0) = ', len(get_all_remaining_pairs(csv_dict)))
+    print('Pairs remaining (must be 0!) = ', len(get_all_remaining_pairs(csv_dict)))
+
+    # Save completed csv dict
+    save_var(csv_dict, 'csv_final.pickle')
+
+
+    # LAST STEP: Save actual CSV file
+    # and substitute node_ids by their index in list(G.nodes), such that they run from 0 to len(G.nodes)-1
+
+    # get a dict that maps the node_id to its index in list(G.nodes)
+    id_to_idx = nodeid_to_index(G)
+
+    # we convert the dict to a np array (discarding all dict keys) for easy printing to CSV
+    csv_np = np.zeros(G.number_of_nodes()**2, dtype=np.int32)
+
+    # append each element of csv_dict to csv_np, being careful to convert each node_id to its index in list(G.nodes)
+    i = 0
+    for start_id, row in csv_dict.items():
+        for dest_id, next_node_id in row.items():
+            csv_np[i] = id_to_idx[next_node_id]
+            i +=1
+
+    # reshape to a square matrix
+    csv_np = np.reshape(csv_np, (G.number_of_nodes(), G.number_of_nodes()))
+
+    # Save as CSV
+    np.savetxt('out/zone_path.csv', csv_np, fmt='%i', delimiter=',')
+
+    print('CSV file zone_paths.csv generated successfully.')

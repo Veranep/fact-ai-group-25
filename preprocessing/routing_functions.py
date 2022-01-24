@@ -260,3 +260,14 @@ def get_all_remaining_pairs(csv_dict):
                 pairs.append(pair)
 
     return pairs
+
+
+def nodeid_to_index(G):
+    """
+    Returns a dict with the node_ids of G as its keys, and the respective node_id's index in list(G.nodes) as its value.
+    This is used to convert the node_ids from G.nodes to ids that run from 0 to len(G.nodes)-1.
+    """
+
+    d = {node_id: i for i, node_id in enumerate(G.nodes)}
+
+    return d
