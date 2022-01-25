@@ -32,7 +32,7 @@ class Environment(metaclass=ABCMeta):
         self.STOP_EPOCH = STOP_EPOCH
         self.DATA_DIR = DATA_DIR
         self.NUM_REGIONS = 10
-        
+
         self.driver_utilities = [0 for i in range(NUM_AGENTS)]
         self.driver_profits = [0 for i in range(NUM_AGENTS)]
         self.requests_region = [0 for i in range(self.NUM_REGIONS)]
@@ -212,7 +212,7 @@ class Environment(metaclass=ABCMeta):
             profit = Util.change_profit(self,action)
             return profit
         else:
-            return sum([request.value for request in action.requests])            
+            return sum([request.value for request in action.requests])
 
     def update_recent_requests(self, recent_requests: List[Request]):
         self.recent_request_history.extend(recent_requests)
@@ -227,7 +227,7 @@ class NYEnvironment(Environment):
     def __init__(self,NUM_AGENTS: int, START_EPOCH: float, STOP_EPOCH: float, MAX_CAPACITY, DATA_DIR: str='../data/ny/', EPOCH_LENGTH: float = 60.0) :
         super().__init__(NUM_LOCATIONS=self.NUM_LOCATIONS, MAX_CAPACITY=MAX_CAPACITY, EPOCH_LENGTH=EPOCH_LENGTH, NUM_AGENTS=NUM_AGENTS, START_EPOCH=START_EPOCH, STOP_EPOCH=STOP_EPOCH, DATA_DIR=DATA_DIR)
         self.initialise_environment()
-        
+
 
     def initialise_environment(self):
         print('Loading Environment...')
@@ -238,7 +238,7 @@ class NYEnvironment(Environment):
         SHORTESTPATH_FILE: str = self.DATA_DIR + 'zone_path.csv'
         self.shortest_path = read_csv(SHORTESTPATH_FILE, header=None).values
 
-        self.labels = pickle.loads(open("../data/ny/new_labels.pkl","rb").read())
+        self.labels = pickle.loads(open(self.DATA_DIR + "new_labels.pkl","rb").read())
 
         IGNOREDZONES_FILE: str = self.DATA_DIR + 'ignorezonelist.txt'
         self.ignored_zones = read_csv(IGNOREDZONES_FILE, header=None).values.flatten()

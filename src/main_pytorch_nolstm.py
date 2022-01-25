@@ -259,6 +259,7 @@ if __name__ == '__main__':
     num_agents = Settings.get_value("num_agents")
     write_to_file = Settings.get_value("write_file")
     value_num = Settings.get_value("value_num")
+    data_dir = Settings.get_value("data_dir")
 
     if Settings.has_value("pickup_delay"):
         PICKUP_DELAY = Settings.get_value("pickup_delay")
@@ -269,7 +270,7 @@ if __name__ == '__main__':
     # Initialising components
     # TODO: Save start hour not start epoch
     envt = NYEnvironment(num_agents, START_EPOCH=START_HOUR * 3600, STOP_EPOCH=END_HOUR * 3600,
-                         MAX_CAPACITY=CAPACITY, EPOCH_LENGTH=DECISION_INTERVAL)
+                         MAX_CAPACITY=CAPACITY, DATA_DIR=data_dir, EPOCH_LENGTH=DECISION_INTERVAL)
     oracle = Oracle(envt)
     central_agent = CentralAgent(envt)
     central_agent.mode = "train"
