@@ -17,3 +17,5 @@ def write_kmeans():
     centers = regions.cluster_centers_
 
     pickle.dump(labels,open("../../data/paper_replication/new_labels.pkl","wb"))
+
+write_kmeans()
