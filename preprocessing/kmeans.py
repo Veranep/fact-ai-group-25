@@ -8,7 +8,7 @@ def write_kmeans():
     coords = []
     for i in zone_lat_long:
         if i!='':
-            a,b,c = i.split(",")
+            _,a,b,c = i.split(",")
             d[a] = (float(b),float(c))
             coords.append((float(b),float(c)))
 
@@ -16,6 +16,6 @@ def write_kmeans():
     labels = regions.labels_
     centers = regions.cluster_centers_
 
-    pickle.dump(labels,open("../../data/paper_replication/new_labels.pkl","wb"))
+    pickle.dump(labels,open("../data/paper_replication/new_labels.pkl","wb"))
 
 write_kmeans()
