@@ -141,6 +141,7 @@ if __name__ == "__main__":
     # Save completed csv dict
     save_var(csv_dict, 'csv_final.pickle')
 
+    print('Started generating paths and traveltime CSV files. This may take up to 20 minutes.')
 
     # LAST STEP: Save actual CSV file
     # and substitute node_ids by their index in list(G.nodes), such that they run from 0 to len(G.nodes)-1
@@ -149,19 +150,27 @@ if __name__ == "__main__":
     id_to_idx = nodeid_to_index(G)
 
     # we convert the dict to a np array (discarding all dict keys) for easy printing to CSV
-    csv_np = np.zeros(G.number_of_nodes()**2, dtype=np.int32)
-
-    # append each element of csv_dict to csv_np, being careful to convert each node_id to its index in list(G.nodes)
+    csv_paths_np = np.zeros(G.number_of_nodes()**2, dtype=np.int32)
+    csv_traveltimes_np = np.zeros(G.number_of_nodes()**2, dtype=np.float32)
+    
+    # append each element of csv_dict to csv_paths_np, being careful to convert each node_id to its index in list(G.nodes)
+    # Also compute travel times between each pair of node_ids and append to csv_traveltimes_np
     i = 0
     for start_id, row in csv_dict.items():
         for dest_id, next_node_id in row.items():
-            csv_np[i] = id_to_idx[next_node_id]
-            i +=1
+            csv_paths_np[i] = id_to_idx[next_node_id]
+            csv_traveltimes_np[i] = compute_travel_time(start_id, dest_id, csv_dict, G) * 4 # multiply by 4 because osm estimates are too optimistic
+            i += 1
 
     # reshape to a square matrix
-    csv_np = np.reshape(csv_np, (G.number_of_nodes(), G.number_of_nodes()))
+    csv_paths_np = np.reshape(csv_paths_np, (G.number_of_nodes(), G.number_of_nodes()))
+    csv_traveltimes_np = np.reshape(csv_traveltimes_np, (G.number_of_nodes(), G.number_of_nodes()))
 
     # Save as CSV
-    np.savetxt('out/zone_path.csv', csv_np, fmt='%i', delimiter=',')
+    np.savetxt('out/zone_path.csv', csv_paths_np, fmt='%i', delimiter=',')
+    np.savetxt('out/zone_traveltime.csv', csv_traveltimes_np, fmt='%1.1f', delimiter=',')
 
-    print('CSV file zone_paths.csv generated successfully.')
+    print('CSV files zone_paths.csv and zone_traveltime.csv generated successfully.')
+
+
+

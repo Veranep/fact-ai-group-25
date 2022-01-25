@@ -2,7 +2,6 @@ import osmnx as ox
 import pickle
 import networkx.algorithms.components as nx
 from shapely.geometry import Polygon
-import numpy as np
 import os.path
 
 def get_graph():
