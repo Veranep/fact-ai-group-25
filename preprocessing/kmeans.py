@@ -3,7 +3,7 @@ from sklearn.cluster import KMeans
 
 def write_kmeans():
 
-    zone_lat_long = open("../../data/paper_replication/zone_latlong.csv").read().split("\n")
+    zone_lat_long = open("../data/paper_replication/zone_latlong.csv").read().split("\n")
     d = {}
     coords = []
     for i in zone_lat_long:
