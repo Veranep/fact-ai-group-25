@@ -5,7 +5,6 @@ import numpy as np
 import csv
 import datetime
 import sys
-import geopy.distance
 from collections import defaultdict
 from get_graph_Manhattan import get_graph
 import time
@@ -26,7 +25,7 @@ nodes = ox.graph_to_gdfs(G, edges=False)
 osmid_to_nodeid = dict(zip(list(nodes.index), list(range(nodes.shape[0]))))
 formatstring = '%Y-%m-%d %H:%M:%S'
 
-with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
+with open('~/fact-ai-rideshare/data/paper_replication/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
     i = 0
     flow = 0
     day = 3
