@@ -8,7 +8,7 @@ def write_kmeans():
     coords = []
     for i in zone_lat_long:
         if i!='':
-            _,a,b,c = i.split(",")
+            a,b,c = i.split(",")
             d[a] = (float(b),float(c))
             coords.append((float(b),float(c)))
 
