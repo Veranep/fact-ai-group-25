@@ -1,7 +1,7 @@
 import osmnx as ox
 import pandas as pd
 import csv
-from datetime import datetime
+import datetime
 import sys
 from get_graph_Manhattan import get_graph
 
@@ -22,6 +22,7 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
     i = 0
     flow = 0
     day = 3
+    amount = 0
     # Writing output directly to txt file, comment this out to see stuff in your terminal
     f = open(f"out/test_flow_5000_{day}.txt", 'w')
     sys.stdout = f  
@@ -31,9 +32,8 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
 
     # Loop through rows csv
     for row in reader:
-        new_time = datetime.strptime(row['tpep_pickup_datetime'], formatstring)
-
-        # Set begin time
+        new_time = datetime.datetime.strptime(row['tpep_pickup_datetime'], formatstring)
+        # # Set begin time
         if i == 0:
             last_time = new_time
         
@@ -47,11 +47,11 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
             f = open(f"out/test_flow_5000_{day}.txt", 'w')
             sys.stdout = f  
             print('1440')
-            print(f'Flows: {flow}-{flow}')
+            print(f'Flows:{flow}-{flow}')
             
-        # Start new flow of 60 seconds
+        # # Start new flow of 60 seconds
         if (new_time - last_time).total_seconds() > 59:
-            last_time = new_time
+            last_time += datetime.timedelta(0,60)
             flow += 1
             print(f'Flows:{flow}-{flow}')
         

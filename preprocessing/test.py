@@ -48,5 +48,3 @@
 #     # f.close()
 import pandas as pd
 
-data = pd.read_csv('data/yellow_tripdata_2016-miniselection.csv')
-print(data.head())
