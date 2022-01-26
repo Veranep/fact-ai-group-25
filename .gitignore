@@ -5,6 +5,7 @@
 # data files and output files
 preprocessing/data/*
 preprocessing/out/*
+preprocessing/out_Manhattan/*
 
 # exception to the rule
 !preprocessing/data/README.txt

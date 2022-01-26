@@ -1,4 +1,5 @@
-from get_graph_Manhattan import get_graph
+# from get_graph_Manhattan import get_graph
+from get_graph_Brooklyn import get_graph
 from routing_functions import *
 import numpy as np
 
@@ -6,7 +7,7 @@ import numpy as np
 # this if __name__ line is necessary for the multiprocessing to work
 if __name__ == "__main__":
 
-    # get the strongly connected graph of Manhattan
+    # get the strongly connected graph of Manhattan/Brooklyn
     G = get_graph()
 
     csv_dict = generate_csv_dict(G)
