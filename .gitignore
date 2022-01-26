@@ -6,6 +6,8 @@
 preprocessing/data/*
 preprocessing/out/*
 preprocessing/out_Manhattan/*
+preprocessing/out_Brooklyn/*
+
 
 # exception to the rule
 !preprocessing/data/README.txt
