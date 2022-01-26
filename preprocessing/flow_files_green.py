@@ -56,7 +56,7 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
             data_day[flow] = defaultdict(int)
         
         # Retrieve pickup and destination from csv 
-        pickup_osmid, dist_pickup = ox.distance.nearest_nodes(G, float(row['pickup_longitude']), float(row['pickup_latitude']), return_dist=True)
+        pickup_osmid, dist_pickup = ox.distance.nearest_nodes(G, float(row['Pickup_longitude']), float(row['pickup_latitude']), return_dist=True)
         dest_osmid, dist_dropoff = ox.distance.nearest_nodes(G, float(row['dropoff_longitude']), float(row['dropoff_latitude']), return_dist=True)
 
         if dist_pickup < 100 and dist_dropoff < 100:

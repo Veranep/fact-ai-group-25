@@ -3,48 +3,53 @@
 # import pandas as pd
 # import numpy as np
 # import csv
-# from datetime import datetime
+from datetime import datetime
 # import sys
 # import geopy.distance
 # from get_graph_Manhattan import get_graph
 # import time
 
-# G = get_graph()
-# nodes = ox.graph_to_gdfs(G, edges=False)
-# osmid_to_nodeid = dict(zip(list(nodes.index), list(range(nodes.shape[0]))))
-# formatstring = '%Y-%m-%d %H:%M:%S'
-
-# data = pd.read_csv('data/yellow_tripdata_2016-verkort.csv')
-# data['tpep_pickup_datetime'] = pd.to_datetime(data["tpep_pickup_datetime"])
-
-# for day in [25, 26, 27, 4]:
-#     flow = 0
-#     df = data[data['tpep_pickup_datetime'].dt.day.isin([day])]
-#     # f = open(f"out/test_flow_5000_{day}.txt", 'w')
-#     # sys.stdout = f  
-#     print('1440')
-#     print(f'Flows:{flow}-{flow}')
-#     start_time = time.time()
-#     for index, row in df.iterrows():
-#         index += 1
-#         new_time = row['tpep_pickup_datetime']
-            
-#         # Start new flow of 60 seconds
-#         if new_time.second == 0:
-#             flow += 1
-#             print(f'Flows:{flow}-{flow}')
-        
-#         # Retrieve pickup and destination from csv 
-#         pickup_osmid, dist_pickup = ox.distance.nearest_nodes(G, float(row['pickup_longitude']), float(row['pickup_latitude']), return_dist=True)
-#         dest_osmid, dist_dropoff = ox.distance.nearest_nodes(G, float(row['dropoff_longitude']), float(row['dropoff_latitude']), return_dist=True)
-
-#         if dist_pickup < 100 and dist_dropoff < 100:
-#             print(f'{osmid_to_nodeid[pickup_osmid]}, {osmid_to_nodeid[dest_osmid]}, 1.0')
-        
-#         if index % 1000 == 0:
-#             print("--- %s seconds ---" % (time.time() - start_time))
-#             break
-#     break
-#     # f.close()
 import pandas as pd
+# from shapely.geometry import Point
+# from shapely.geometry.polygon import Polygon
 
+def data_selection(df, min_latitude, max_latitude, min_longitude, max_longitude):
+    df = df[df['Pickup_latitude'] > min_latitude]
+    df = df[df['Pickup_latitude'] < max_latitude]
+    df = df[df['Pickup_longitude'] > min_longitude]
+    df = df[df['Pickup_longitude'] < max_longitude]
+
+    df['lpep_pickup_datetime'] = pd.to_datetime(df['lpep_pickup_datetime'])
+    df = df.sort_values(by="lpep_pickup_datetime")
+
+    return df
+
+longitude = [-73.962177,
+            -73.913000,
+            -73.917864,
+            -73.897018,
+            -73.956026,
+            -74.034150,
+            -73.998521,
+            -73.973849]
+
+lats =  [40.749373, 
+        40.714213,
+        40.710215, 
+        40.677902, 
+        40.644944, 
+        40.674024, 
+        40.705150, 
+        40.708715]
+min_latitude = min(lats)
+max_latitude = max(lats)
+
+min_longitude = min(longitude)
+max_longitude = max(longitude)
+
+maart = pd.read_csv('data/green_tripdata_2016-03.csv')
+maart = data_selection(maart, min_latitude, max_latitude, min_longitude, max_longitude)
+
+juni = pd.read_csv('data/green_tripdata_2016-06.csv')
+juni = data_selection(juni, min_latitude, max_latitude, min_longitude, max_longitude)
+print(len(juni) + len(maart))
