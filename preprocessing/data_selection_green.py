@@ -47,9 +47,14 @@ max_latitude = max(lats)
 min_longitude = min(longitude)
 max_longitude = max(longitude)
 
+feb = pd.read_csv('data/green_tripdata_2016-02.csv')
+feb = data_selection(feb, min_latitude, max_latitude, min_longitude, max_longitude)
+
 maart = pd.read_csv('data/green_tripdata_2016-03.csv')
 maart = data_selection(maart, min_latitude, max_latitude, min_longitude, max_longitude)
 
 juni = pd.read_csv('data/green_tripdata_2016-06.csv')
 juni = data_selection(juni, min_latitude, max_latitude, min_longitude, max_longitude)
-print(len(juni) + len(maart))
+frames = [feb, maart, juni]
+result = pd.concat(frames)
+result.to_csv('data/green_tripdata_2016-236.csv')
