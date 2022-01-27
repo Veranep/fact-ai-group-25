@@ -271,6 +271,7 @@ if __name__ == '__main__':
     # TODO: Save start hour not start epoch
     envt = NYEnvironment(num_agents, START_EPOCH=START_HOUR * 3600, STOP_EPOCH=END_HOUR * 3600,
                          MAX_CAPACITY=CAPACITY, DATA_DIR=data_dir, EPOCH_LENGTH=DECISION_INTERVAL)
+    envt.NUM_LOCATIONS = len(pickle.loads(open(envt.DATA_DIR + "new_labels.pkl","rb").read()))
     oracle = Oracle(envt)
     central_agent = CentralAgent(envt)
     central_agent.mode = "train"
