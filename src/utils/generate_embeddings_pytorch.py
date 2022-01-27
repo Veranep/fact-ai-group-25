@@ -71,7 +71,7 @@ if __name__ == '__main__':
     travel_times /= max_val
 
     # Define NN
-    model = EmbeddingModel(travel_times.shape[0] + 1, 10, 100, 1)
+    model = EmbeddingModel(travel_times.shape[0] + 1, 100, 100, 1)
 
     # Format
     X: Dict[str, Any] = {'origin_input': [], 'destination_input': []}
