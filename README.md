@@ -12,7 +12,7 @@ conda env create -f environment.yml
 
 ## Training and Evaluation
 
-To train and evaluate the model(s) in the paper, run this command:
+To train and evaluate the model(s) in the paper, run these commands:
 
 ```python
 # driver side fairness objective
@@ -26,3 +26,11 @@ python main_pytorch.py training_days 3 testing_days 1 num_agents 200 value_num 1
 ```
 
 ## Results
+
+[The figures required to support the claims:](generate_plots.ipynb)
+
+
+![image1](/images/50_driv_orig.png)
+![image2](/images/200_driv_orig.png)
+![image3](/images/200_driv_tot_inc_orig.png)
+![image4](/images/200_driv_inc_orig.png)
