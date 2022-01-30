@@ -21,11 +21,11 @@ def filter_list(list_to_filter, list_with_indices):
 
 def print_txt(data, day):
     output = f'{len(data.keys())}\n'
-    
     for key in data:
         output += f'Flows:{key}-{key}\n'
         for flows in data[key]:
-            output += f'{flows[0]}, {flows[1]}, {float(data[key][flows])}\n'
+            output += f'{flows[0]},{flows[1]},{float(data[key][flows])}\n'
+
     f = open(f"out/brooklyn/test_flow_5000_{day}.txt", 'w')
     f.write(output)
     return
