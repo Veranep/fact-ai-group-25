@@ -4,10 +4,16 @@ This repository is the official implementation of Replication study of "Data-Dri
 
 ## Requirements
 
-To install requirements:
+To install requirements for simulating the taxi environment, training the location embeddings, or training the neural value function:
 
 ```setup
 conda env create -f environment.yml
+```
+
+To install requirements for preprocessing raw New York taxi data, obtaining a graph for (part of) a city using OpenStreetMap, or obtaining corresponding travel time and shortest path files:
+
+```setup
+conda env create -f preprocessing/environment.yml
 ```
 
 ## Training and Evaluation
