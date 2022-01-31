@@ -1,6 +1,8 @@
+"""
+Initialize locations of 3000 taxi's
+"""
+
 import osmnx as ox
-import random
-import networkx as nx
 import sys
 from get_graph_Manhattan import get_graph
 
