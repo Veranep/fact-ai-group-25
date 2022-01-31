@@ -5,7 +5,7 @@ from Environment import NYEnvironment
 from CentralAgent import CentralAgent
 from LearningAgent import LearningAgent
 from Oracle import Oracle
-import ValueFunctionPytorchNoLSTM
+import ValueFunctionNoLSTM
 from Experience import Experience
 from Request import Request
 
@@ -274,7 +274,7 @@ if __name__ == '__main__':
     oracle = Oracle(envt)
     central_agent = CentralAgent(envt)
     central_agent.mode = "train"
-    value_function = ValueFunctionPytorchNoLSTM.num_to_value_function(envt,value_num)
+    value_function = ValueFunctionNoLSTM.num_to_value_function(envt,value_num)
 
     print("Input settings {}".format(Settings.settings_list))
 

@@ -5,7 +5,7 @@ from Environment import NYEnvironment
 from CentralAgent import CentralAgent
 from LearningAgent import LearningAgent
 from Oracle import Oracle
-import ValueFunctionPytorch
+import ValueFunction
 from Experience import Experience
 from Request import Request
 
@@ -275,7 +275,7 @@ if __name__ == '__main__':
     oracle = Oracle(envt)
     central_agent = CentralAgent(envt)
     central_agent.mode = "train"
-    value_function = ValueFunctionPytorch.num_to_value_function(envt,value_num)
+    value_function = ValueFunction.num_to_value_function(envt,value_num)
 
     print("Input settings {}".format(Settings.settings_list))
 
@@ -325,7 +325,7 @@ if __name__ == '__main__':
             epoch_data['truncated_shapley'] = central_agent.truncated_shapley_final
             epoch_data['random_shapley'] = central_agent.random_shapley_final
             epoch_data['one_permutation_shapley'] = central_agent.one_permutation_shapley_final
-            file_name = str(datetime.datetime.now()).split(".")[0].replace(" ","_").replace(":","")
+            file_name = str(datetime.datetime.now()).split(".")[0].replace(" ","_").replace(":","") + f"_{value_num}_{num_agents}"
             pickle.dump(epoch_data,open("../logs/epoch_data/"+file_name+".pkl","wb"))
 
         value_function.add_to_logs('test_requests_served', total_requests_served, envt.num_days_trained)

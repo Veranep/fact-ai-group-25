@@ -5,7 +5,7 @@ from Environment import NYEnvironment
 from CentralAgent import CentralAgent
 from LearningAgent import LearningAgent
 from Oracle import Oracle
-import ValueFunctionKeras
+import ValueFunction
 from Experience import Experience
 from Request import Request
 
@@ -251,7 +251,7 @@ if __name__ == '__main__':
     SAVE_FREQ: int = VALID_FREQ
     Request.MAX_PICKUP_DELAY = PICKUP_DELAY
     Request.MAX_DROPOFF_DELAY = 2 * PICKUP_DELAY
-    NEURAL_VALUE_FUNCTIONS = [1,8]
+    NEURAL_VALUE_FUNCTIONS = [1,8, 10, 14, 15]
 
     # Load in different settings
     training_days = Settings.get_value("training_days")
@@ -259,6 +259,7 @@ if __name__ == '__main__':
     num_agents = Settings.get_value("num_agents")
     write_to_file = Settings.get_value("write_file")
     value_num = Settings.get_value("value_num")
+    data_dir = Settings.get_value("data_dir")
 
     if Settings.has_value("pickup_delay"):
         PICKUP_DELAY = Settings.get_value("pickup_delay")
@@ -269,11 +270,12 @@ if __name__ == '__main__':
     # Initialising components
     # TODO: Save start hour not start epoch
     envt = NYEnvironment(num_agents, START_EPOCH=START_HOUR * 3600, STOP_EPOCH=END_HOUR * 3600,
-                         MAX_CAPACITY=CAPACITY, EPOCH_LENGTH=DECISION_INTERVAL)
+                         MAX_CAPACITY=CAPACITY, DATA_DIR=data_dir, EPOCH_LENGTH=DECISION_INTERVAL)
+    envt.NUM_LOCATIONS = len(pickle.loads(open(envt.DATA_DIR + "new_labels.pkl","rb").read()))
     oracle = Oracle(envt)
     central_agent = CentralAgent(envt)
     central_agent.mode = "train"
-    value_function = ValueFunctionKeras.num_to_value_function(envt,value_num)
+    value_function = ValueFunction.num_to_value_function(envt,value_num)
 
     print("Input settings {}".format(Settings.settings_list))
 
@@ -297,12 +299,12 @@ if __name__ == '__main__':
                 # TODO: Save results better
                 if (isinstance(value_function, NeuralNetworkBased)):
                     if (test_score > max_test_score or (envt.num_days_trained % SAVE_FREQ) == (SAVE_FREQ - 1)):
-                        value_function.model.save('../models/{}_{}agent_{}capacity_{}delay_{}interval_{}_{}.h5'.format(type(value_function).__name__, numagents, args.capacity, args.pickupdelay, args.decisioninterval, envt.num_days_trained, test_score))
+                        value_function.trainer.save_checkpoint('{}_{}agent_{}capacity_{}delay_{}interval_{}_{}.h5'.format(type(value_function).__name__, numagents, args.capacity, args.pickupdelay, args.decisioninterval, envt.num_days_trained, test_score))
                         max_test_score = test_score if test_score > max_test_score else max_test_score
 
             envt.num_days_trained += 1
-            if value_num in NEURAL_VALUE_FUNCTIONS:
-                value_function.model.save('../models/{}_{}.h5'.format(num_agents,  envt.num_days_trained))
+            if value_num in NEURAL_VALUE_FUNCTIONS and value_function.trainer.model:
+                value_function.trainer.save_checkpoint('{}_{}.h5'.format(num_agents,  envt.num_days_trained))
 
     # Reset the driver utilities
     envt.reset()
