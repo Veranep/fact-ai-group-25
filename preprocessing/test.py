@@ -9,35 +9,51 @@ from collections import defaultdict
 from get_graph_Manhattan import get_graph
 import time
 
+G = get_graph()
+nodes = ox.graph_to_gdfs(G, edges=False)
+GET_NODEID = dict(zip(list(nodes.index), list(range(nodes.shape[0]))))
+
 def filter_list(list_to_filter, list_with_indices):
     """
     Returns a list with all entries list_to_filter[i] for all i in list_with_indices
     """
     return np.array(list_to_filter)[list_with_indices]
 
-
 def print_txt(data, day):
+    output = f'{len(data)}\n'
+    for key in data:
+        output += f'Flows:{key}-{key}\n'
+        for flows in data[key]:
+            output += f'{flows[0]}, {flows[1]}, {float(data[key][flows])}\n'
     f = open(f"out/test_flow_5000_{day}.txt", 'w')
-    sys.stdout = f
-
-    # start the file with the number of flows
-    print(len(data))
-
-    for flow_number in data:
-        print(f'Flows:{flow_number}-{flow_number}')
-
-        for start_dest_pair, trip_count in data[flow_number].items():
-            start_id = start_dest_pair[0]
-            dest_id = start_dest_pair[1]
-            print(f'{start_id}, {dest_id}, {float(trip_count)}')
-
-    f.close()
+    f.write(output)
     return
 
-G = get_graph()
-nodes = ox.graph_to_gdfs(G, edges=False)
-osmid_to_nodeid = dict(zip(list(nodes.index), list(range(nodes.shape[0]))))
-formatstring = '%Y-%m-%d %H:%M:%S'
+def process_requests(start_lngs, start_lats, dest_lngs, dest_lats, flows_list):
+    # Retrieve pickup and destination from csv
+    start_osmids, start_dists = ox.distance.nearest_nodes(G, start_lngs, start_lats, return_dist=True)
+    dest_osmids, dropoff_dists = ox.distance.nearest_nodes(G, dest_lngs, dest_lats, return_dist=True)
+
+    filter = np.logical_and(np.array(start_dists) < 100, np.array(dropoff_dists) < 100)
+
+    flows_list = filter_list(flows_list, filter)
+    start_osmids = filter_list(start_osmids, filter)
+    dest_osmids = filter_list(dest_osmids, filter)
+
+    data_day = {}
+
+    for j in range(len(flows_list)):
+        
+        flow_number = flows_list[j]
+
+        if flow_number not in data_day:
+            data_day[flow_number] = defaultdict(int)
+
+        start_id = GET_NODEID[start_osmids[j]]
+        dest_id = GET_NODEID[dest_osmids[j]]
+        data_day[flow_number][(start_id, dest_id)] += 1
+    
+    return data_day 
 
 with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
     i = 0
@@ -47,6 +63,7 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     data_day = {flow: defaultdict(int)}
     start_time = time.time()
+    formatstring = '%Y-%m-%d %H:%M:%S'
 
     # these lists respectively contain for each index i the flow number, the start latitude, the start longitude, the dest latitude and the dest longitude of one request
     flows_list = []
@@ -65,34 +82,11 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
 
         # Start new day file
         if new_time.day != last_time.day:
-            
 
-            # Retrieve pickup and destination from csv
-            start_osmids, start_dists = ox.distance.nearest_nodes(G, start_lngs, start_lats, return_dist=True)
-            dest_osmids, dropoff_dists = ox.distance.nearest_nodes(G, dest_lngs, dest_lats, return_dist=True)
-
-            filter = np.logical_and(np.array(start_dists) < 100, np.array(dropoff_dists) < 100)
-
-            flows_list = filter_list(flows_list, filter)
-            start_osmids = filter_list(start_osmids, filter)
-            dest_osmids = filter_list(dest_osmids, filter)
-
-            data_day = {}
-
-            for j in range(len(flows_list)):
-                
-                flow_number = flows_list[j]
-
-                if flow_number not in data_day:
-                    data_day[flow_number] = defaultdict(int)
-
-                start_id = osmid_to_nodeid[start_osmids[j]]
-                dest_id = osmid_to_nodeid[dest_osmids[j]]
-                data_day[flow_number][(start_id, dest_id)] += 1
-
-            # should the day be incremented before printing?
-            day += 1
+            # Process the requets and write to txt file
+            data_day = process_requests(start_lngs, start_lats, dest_lngs, dest_lats, flows_list)
             print_txt(data_day, day)
+            day += 1
             
             # reset variables for next day
             flow = 0
@@ -117,6 +111,7 @@ with open('data/yellow_tripdata_2016-miniselection.csv', newline='') as csvfile:
 
         i += 1
 
+    data_day = process_requests(start_lngs, start_lats, dest_lngs, dest_lats, flows_list)
     print_txt(data_day, day)
 
 

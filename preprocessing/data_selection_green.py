@@ -1,19 +1,22 @@
-# import osmnx as ox
-# import networkx as nx
-# import pandas as pd
-# import numpy as np
-# import csv
-from datetime import datetime
-# import sys
-# import geopy.distance
-# from get_graph_Manhattan import get_graph
-# import time
+"""
+Select data from the green taxi dataset based on chosen timeframe and area.
+Raw data available at https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+Created by: Sabijn Perdijk 
+Created at: jan 2022
+"""
 
+from datetime import datetime
 import pandas as pd
-# from shapely.geometry import Point
-# from shapely.geometry.polygon import Polygon
 
 def data_selection(df, min_latitude, max_latitude, min_longitude, max_longitude):
+    """
+    Select data occuring in specific area
+    df: raw data
+    min_latitude: value of smallest latitude
+    max_latitude: value of highest latitude
+    min_longitude: value of smallest longitude
+    max_longitude: value of highest longitude
+    """
     df = df[df['Pickup_latitude'] > min_latitude]
     df = df[df['Pickup_latitude'] < max_latitude]
     df = df[df['Pickup_longitude'] > min_longitude]
@@ -24,6 +27,7 @@ def data_selection(df, min_latitude, max_latitude, min_longitude, max_longitude)
 
     return df
 
+# Lat and long coordinates of polygon defining area. Coordinates based on map NY.
 longitude = [-73.962177,
             -73.913000,
             -73.917864,
@@ -47,14 +51,14 @@ max_latitude = max(lats)
 min_longitude = min(longitude)
 max_longitude = max(longitude)
 
-feb = pd.read_csv('data/green_tripdata_2016-02.csv')
-feb = data_selection(feb, min_latitude, max_latitude, min_longitude, max_longitude)
+# Loop through data of februari, march, and june. Select chosen area and concatenate files.
+frames = []
+for month in [2, 3, 6]:
+    data = pd.read_csv(f'data/green_tripdata_2016-0{month}.csv')
+    data = data_selection(data, min_latitude, max_latitude, min_longitude, max_longitude)
+    frames.append(data)
 
-maart = pd.read_csv('data/green_tripdata_2016-03.csv')
-maart = data_selection(maart, min_latitude, max_latitude, min_longitude, max_longitude)
-
-juni = pd.read_csv('data/green_tripdata_2016-06.csv')
-juni = data_selection(juni, min_latitude, max_latitude, min_longitude, max_longitude)
-frames = [feb, maart, juni]
 result = pd.concat(frames)
-result.to_csv('data/green_tripdata_2016-236.csv')
+
+# Save resulting dataframe
+result.to_csv('data/green_tripdata_2016_modified.csv')
