@@ -6,6 +6,7 @@ from CentralAgent import CentralAgent
 from LearningAgent import LearningAgent
 from Oracle import Oracle
 import ValueFunction
+from ValueFunction import NeuralNetworkBased
 from Experience import Experience
 from Request import Request
 
