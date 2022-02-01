@@ -27,6 +27,7 @@ def print_txt(data, day):
     Writes the dictonary of a day to a formatted txt
     """
     output = f'{len(data.keys())}\n'
+
     for key in data:
         output += f'Flows:{key}-{key}\n'
         for flows in data[key]:
@@ -57,12 +58,16 @@ def process_requests(start_lngs, start_lats, dest_lngs, dest_lats, flows_list):
 
     # Create flows of 60 sec
     data_day = {}
+    total_flows = 1440
+    for i in range(total_flows):
+        data_day[i] = defaultdict(int)
+
     for j in range(len(flows_list)):
         
         flow_number = flows_list[j]
 
-        if flow_number not in data_day:
-            data_day[flow_number] = defaultdict(int)
+        # if flow_number not in data_day:
+        #     data_day[flow_number] = defaultdict(int)
         
         # Map osmID to nodeID
         start_id = GET_NODEID[start_osmids[j]]
