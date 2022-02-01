@@ -265,8 +265,8 @@ if __name__ == '__main__':
     if Settings.has_value("pickup_delay"):
         PICKUP_DELAY = Settings.get_value("pickup_delay")
 
-    TRAINING_DAYS: List[int] = list(range(1, 1+training_days))
-    TEST_DAYS: List[int] = list(range(56, 56+testing_days))
+    TRAINING_DAYS: List[int] = list(range(3, 3+training_days))
+    TEST_DAYS: List[int] = list(range(57, 57+testing_days))
 
     # Initialising components
     # TODO: Save start hour not start epoch
