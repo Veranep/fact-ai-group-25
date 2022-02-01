@@ -592,6 +592,10 @@ def immideate_reward_score(envt,action,agent,driver_num):
     score = immediate_reward + remaining_delay_bonus
     return score
 
+def profit_score(envt,action,agent,driver_num):
+    profit = Util.change_profit(envt,action)
+    return profit
+
 def num_to_value_function(envt,num):
     model_loc = ""
     if Settings.has_value("model_loc"):
@@ -632,5 +636,7 @@ def num_to_value_function(envt,num):
     #reward is total profit
     elif num == 15:
         value_function = PathBasedNN(envt,load_model_loc=model_loc)
+    elif num == 16:
+        value_function = GreedyValueFunction(envt,profit_score)
 
     return value_function
