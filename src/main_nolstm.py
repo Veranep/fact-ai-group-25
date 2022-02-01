@@ -299,7 +299,7 @@ if __name__ == '__main__':
                 # TODO: Save results better
                 if (isinstance(value_function, NeuralNetworkBased)):
                     if (test_score > max_test_score or (envt.num_days_trained % SAVE_FREQ) == (SAVE_FREQ - 1)):
-                        value_function.trainer.save_checkpoint('{}_{}agent_{}capacity_{}delay_{}interval_{}_{}.h5'.format(type(value_function).__name__, numagents, args.capacity, args.pickupdelay, args.decisioninterval, envt.num_days_trained, test_score))
+                        value_function.trainer.save_checkpoint('{}_{}agent_{}capacity_{}delay_{}interval_{}_{}.h5'.format(type(value_function).__name__, num_agents, args.capacity, args.pickupdelay, args.decisioninterval, envt.num_days_trained, test_score))
                         max_test_score = test_score if test_score > max_test_score else max_test_score
 
             envt.num_days_trained += 1
