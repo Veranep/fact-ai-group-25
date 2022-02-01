@@ -16,19 +16,29 @@ To install requirements for preprocessing raw New York taxi data, obtaining a gr
 conda env create -f preprocessing/environment.yml
 ```
 
+## Preprocessing
+The labels that assign each node in the graph to a neighborhood and are required to train/evaluate models and to generate the results are created as follows:
+```python
+python preprocessing/kmeans.py
+```
+
 ## Training and Evaluation
+The pretrained location embeddings are obtained by running these commands:
+```python
+python src/utils/generate_embeddings.py
+```
 
 To train and evaluate the model(s) in the paper, run these commands:
 
 ```python
 # driver side fairness objective
-python main_pytorch.py training_days 3 testing_days 1 num_agents 200 value_num 10 write_file True print_verbose False lambda 0.67 data_dir "'../data/ny/'"
+python src/main.py training_days 3 testing_days 1 num_agents 200 value_num 10 write_file True print_verbose False lambda 0.67 data_dir "'../data/ny/'"
 # income objective
-python main_pytorch.py training_days 3 testing_days 1 num_agents 200 value_num 15 write_file True print_verbose False data_dir "'../data/ny/'"
+python src/main.py training_days 3 testing_days 1 num_agents 200 value_num 15 write_file True print_verbose False data_dir "'../data/ny/'"
 # rider side fairness objective
-python main_pytorch.py training_days 2 testing_days 1 num_agents 200 value_num 14 write_file True print_verbose False lambda 1000000000 data_dir "'../data/ny/'"
+python src/main.py training_days 2 testing_days 1 num_agents 200 value_num 14 write_file True print_verbose False lambda 1000000000 data_dir "'../data/ny/'"
 # requests objective
-python main_pytorch.py training_days 3 testing_days 1 num_agents 200 value_num 1 write_file True print_verbose False data_dir "'../data/ny/'"
+python src/main.py training_days 3 testing_days 1 num_agents 200 value_num 1 write_file True print_verbose False data_dir "'../data/ny/'"
 ```
 
 ## Results
