@@ -1,0 +1,14 @@
+name: fact-course-data-preprocessing
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9.7
+  - matplotlib
+  - jupyter
+  - osmnx
+  - shapely
+  - networkx
+  - numpy
+  - pandas
+  - geopy
