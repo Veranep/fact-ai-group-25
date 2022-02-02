@@ -172,6 +172,7 @@ if __name__ == "__main__":
     np.savetxt('out/zone_traveltime.csv', csv_traveltimes_np, fmt='%1.1f', delimiter=',')
 
     print('CSV files zone_paths.csv and zone_traveltime.csv generated successfully.')
+    print('Remember to run traveltime_updater.py before using the traveltime CSV in the neural net.')
 
 
 
