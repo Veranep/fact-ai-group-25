@@ -1,8 +1,6 @@
 """
 Create 'flow files' for Brooklyn. 
 Each file contains requests (in the from of (pickup, dest, counter)) of one day, ordered in 60sec flows.
-Creator: Victor Prins & Sabijn Perdijk
-Created at: jan 2022
 """
 
 import osmnx as ox
