@@ -1,8 +1,6 @@
 """
 Select data from the green taxi dataset based on chosen timeframe and area.
 Raw data available at https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
-Created by: Sabijn Perdijk 
-Created at: jan 2022
 """
 
 from datetime import datetime
