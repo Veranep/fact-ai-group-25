@@ -36,7 +36,7 @@ To generate the csv file with the shortest paths and the travel time of these pa
 ```python
 python preprocessing/generate_paths_and_traveltimes.py
 ```
-To obtain the initial locations of the taxi's, run:
+To obtain the initial locations of the taxies, run:
 ```python
 python preprocessing/initializations_taxies.py
 ```
