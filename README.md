@@ -62,7 +62,7 @@ python src/main.py training_days 3 testing_days 1 num_agents 200 value_num 1 wri
 
 ## Results
 
-[The figures required to support the claims:](generate_plots.ipynb)
+[The figures required to support the claims, which were generated here:](generate_plots.ipynb)
 
 
 ![image1](/images/50_driv_orig.png)
