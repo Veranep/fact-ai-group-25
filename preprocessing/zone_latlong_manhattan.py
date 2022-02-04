@@ -1,7 +1,5 @@
 """
 Create csv file which maps coordinates to nodeID's
-Creator: Sabijn Perdijk
-Created at: jan 2022
 """
 
 import osmnx as ox
