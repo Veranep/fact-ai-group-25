@@ -21,6 +21,25 @@ The labels that assign each node in the graph to a neighborhood and are required
 ```python
 python preprocessing/kmeans.py
 ```
+To create the graph (i.e. streetnetwork) that is needed to replicate the original experiments, run respectively for Manhattan and Brooklyn:
+```python
+python preprocessing/get_graph_Manhattan.py
+python preprocessing/get_graph_Brooklyn.py
+```
+
+The txt files containing the rider request (start, dest, counter) can be obtained by running these commands:
+```python
+python preprocessing/flow_files_manhattan.py
+python preprocessing/flow_files_brooklyn.py
+```
+To generate the csv file with the shortest paths and the travel time of these paths, run this command:
+```python
+python preprocessing/generate_paths_and_traveltimes.py
+```
+To obtain the initial locations of the taxi's, run:
+```python
+python preprocessing/initializations_taxies.py
+```
 
 ## Training and Evaluation
 The pretrained location embeddings are obtained by running these commands:
